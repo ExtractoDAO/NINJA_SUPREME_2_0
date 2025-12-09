@@ -280,88 +280,124 @@ HTML_CONTENT = '''<!DOCTYPE html>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:8000';
+        const API_URL = window.location.origin; // Use same origin to avoid CORS
 
         async function loadMetrics() {
-            const data = await fetch(`${API_URL}/api/metrics`).then(r => r.json());
-            document.getElementById('lcdm_logz').textContent = data.lcdm.logZ.toFixed(2);
-            document.getElementById('dut_logz').textContent = data.dut.logZ.toFixed(2);
-            document.getElementById('log_bf').textContent = '+' + data.comparison.log_bayes_factor.toFixed(2);
+            try {
+                console.log('Loading metrics from:', `${API_URL}/api/metrics`);
+                const response = await fetch(`${API_URL}/api/metrics`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                console.log('Metrics loaded:', data);
+                document.getElementById('lcdm_logz').textContent = data.lcdm.logZ.toFixed(2);
+                document.getElementById('dut_logz').textContent = data.dut.logZ.toFixed(2);
+                document.getElementById('log_bf').textContent = '+' + data.comparison.log_bayes_factor.toFixed(2);
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+                document.getElementById('lcdm_logz').textContent = 'ERROR';
+                document.getElementById('dut_logz').textContent = 'ERROR';
+                document.getElementById('log_bf').textContent = 'ERROR';
+            }
         }
 
         async function loadChart(type) {
-            // Update button styles
-            document.querySelectorAll('button').forEach(btn => {
-                btn.className = 'px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300';
-            });
-            event.target.className = 'px-6 py-3 rounded-xl font-semibold bg-cyan-600 text-white';
-
-            const data = await fetch(`${API_URL}/api/${type}`).then(r => r.json());
-
-            const titles = {
-                hz: ['H(z) - Parâmetro de Hubble', 'H(z) [km/s/Mpc]'],
-                mu: ['μ(z) - Módulo de Distância', 'μ(z)'],
-                dv: ['D_V(z) - Volume BAO', 'D_V(z) [Mpc]'],
-                fs8: ['fσ₈(z) - Taxa de Crescimento', 'fσ₈(z)']
-            };
-
-            const traces = [
-                {
-                    x: data.z,
-                    y: data.lcdm,
-                    mode: 'lines',
-                    name: 'ΛCDM',
-                    line: { color: '#ef4444', width: 3, dash: 'dash' }
-                },
-                {
-                    x: data.z,
-                    y: data.dut,
-                    mode: 'lines',
-                    name: 'DUT',
-                    line: { color: '#22d3ee', width: 4 }
-                }
-            ];
-
-            // Add observational data if available
-            if (data.data_z) {
-                traces.push({
-                    x: data.data_z,
-                    y: data.data_hz || data.data_fs8,
-                    error_y: {
-                        type: 'data',
-                        array: data.data_err,
-                        visible: true
-                    },
-                    mode: 'markers',
-                    name: 'Dados',
-                    marker: { color: '#fff', size: 8 }
+            try {
+                // Update button styles
+                document.querySelectorAll('button').forEach(btn => {
+                    btn.className = 'px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300';
                 });
+                event.target.className = 'px-6 py-3 rounded-xl font-semibold bg-cyan-600 text-white';
+
+                console.log('Loading chart:', type);
+                const response = await fetch(`${API_URL}/api/${type}`);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                console.log('Chart data loaded:', type, data);
+
+                const titles = {
+                    hz: ['H(z) - Parâmetro de Hubble', 'H(z) [km/s/Mpc]'],
+                    mu: ['μ(z) - Módulo de Distância', 'μ(z)'],
+                    dv: ['D_V(z) - Volume BAO', 'D_V(z) [Mpc]'],
+                    fs8: ['fσ₈(z) - Taxa de Crescimento', 'fσ₈(z)']
+                };
+
+                const traces = [
+                    {
+                        x: data.z,
+                        y: data.lcdm,
+                        mode: 'lines',
+                        name: 'ΛCDM',
+                        line: { color: '#ef4444', width: 3, dash: 'dash' }
+                    },
+                    {
+                        x: data.z,
+                        y: data.dut,
+                        mode: 'lines',
+                        name: 'DUT',
+                        line: { color: '#22d3ee', width: 4 }
+                    }
+                ];
+
+                // Add observational data if available
+                if (data.data_z) {
+                    traces.push({
+                        x: data.data_z,
+                        y: data.data_hz || data.data_fs8,
+                        error_y: {
+                            type: 'data',
+                            array: data.data_err,
+                            visible: true
+                        },
+                        mode: 'markers',
+                        name: 'Dados',
+                        marker: { color: '#fff', size: 8 }
+                    });
+                }
+
+                const layout = {
+                    title: { text: titles[type][0], font: { color: '#e0e0e0', size: 20 } },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(15,23,42,0.5)',
+                    xaxis: { title: 'Redshift z', gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0' },
+                    yaxis: { title: titles[type][1], gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0' },
+                    font: { color: '#e0e0e0' },
+                    legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.7)' }
+                };
+
+                Plotly.newPlot('chart', traces, layout, { responsive: true });
+            } catch (error) {
+                console.error('Error loading chart:', error);
+                document.getElementById('chart').innerHTML = `
+                    <div class="flex items-center justify-center h-full text-red-400">
+                        <div class="text-center">
+                            <p class="text-2xl mb-2">❌ Erro ao carregar gráfico</p>
+                            <p class="text-sm">${error.message}</p>
+                        </div>
+                    </div>
+                `;
             }
-
-            const layout = {
-                title: { text: titles[type][0], font: { color: '#e0e0e0', size: 20 } },
-                paper_bgcolor: 'rgba(0,0,0,0)',
-                plot_bgcolor: 'rgba(15,23,42,0.5)',
-                xaxis: { title: 'Redshift z', gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0' },
-                yaxis: { title: titles[type][1], gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0' },
-                font: { color: '#e0e0e0' },
-                legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.7)' }
-            };
-
-            Plotly.newPlot('chart', traces, layout, { responsive: true });
         }
 
         // Initialize
+        console.log('Initializing NINJA SUPREME 2.0...');
         loadMetrics();
-        loadChart('hz');
+
+        // Load first chart after a small delay to ensure metrics load first
+        setTimeout(() => {
+            const firstBtn = document.querySelector('button');
+            if (firstBtn) {
+                firstBtn.click();
+            }
+        }, 100);
     </script>
 </body>
 </html>
 '''
 
-@app.get("/viewer", response_class=HTMLResponse)
+@app.get("/viewer")
 async def viewer():
     """Serve the HTML viewer"""
+    from fastapi.responses import HTMLResponse
     return HTMLResponse(content=HTML_CONTENT)
 
 if __name__ == "__main__":
