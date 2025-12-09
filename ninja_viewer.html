@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NINJA SUPREME 2.0 - Visualizador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.26.0/plotly.min.js"></script>
+    <style>
+        .cyber-bg {
+            background: linear-gradient(135deg, #0a0e27 0%, #1a1f3a 50%, #0a0e27 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+        }
+        @keyframes gradientShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .glow { text-shadow: 0 0 20px #6366f1; }
+    </style>
+</head>
+<body class="cyber-bg text-white min-h-screen font-sans">
+    <div class="container mx-auto px-6 py-12 max-w-7xl">
+
+        <div class="text-center mb-16">
+            <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 glow mb-4">
+                🥷⭐ NINJA SUPREME 2.0
+            </h1>
+            <p class="text-xl text-cyan-300">Análise Cosmológica Bayesiana | API Standalone</p>
+        </div>
+
+        <!-- Metrics -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div class="bg-gradient-to-br from-blue-900/50 to-blue-800/30 backdrop-blur-xl p-8 rounded-2xl border border-blue-500/50">
+                <div class="text-sm text-blue-300 uppercase mb-2">ΛCDM Log Z</div>
+                <div class="text-4xl font-black text-blue-400" id="lcdm_logz">...</div>
+            </div>
+            <div class="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 backdrop-blur-xl p-8 rounded-2xl border border-cyan-500/50">
+                <div class="text-sm text-cyan-300 uppercase mb-2">DUT Log Z</div>
+                <div class="text-4xl font-black text-cyan-400" id="dut_logz">...</div>
+            </div>
+            <div class="bg-gradient-to-br from-green-900/50 to-green-800/30 backdrop-blur-xl p-8 rounded-2xl border border-green-500/50">
+                <div class="text-sm text-green-300 uppercase mb-2">Log(Bayes Factor)</div>
+                <div class="text-4xl font-black text-green-400" id="log_bf">...</div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="bg-gray-900/80 backdrop-blur-xl p-10 rounded-3xl border border-cyan-500/30 mb-12">
+            <div class="flex gap-3 mb-8 flex-wrap">
+                <button onclick="loadChart('hz')" class="px-6 py-3 rounded-xl font-semibold bg-cyan-600 text-white">📈 H(z)</button>
+                <button onclick="loadChart('mu')" class="px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300">📏 μ(z)</button>
+                <button onclick="loadChart('dv')" class="px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300">🌌 D_V(z)</button>
+                <button onclick="loadChart('fs8')" class="px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300">🔬 fσ₈(z)</button>
+            </div>
+            <div id="chart" style="width: 100%; height: 500px;"></div>
+        </div>
+
+        <div class="text-center text-gray-400">
+            <p>API endpoint: <code class="bg-gray-800 px-2 py-1 rounded">http://localhost:8000</code></p>
+        </div>
+
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:8000';
+
+        async function loadMetrics() {
+            const data = await fetch(`${API_URL}/api/metrics`).then(r => r.json());
+            document.getElementById('lcdm_logz').textContent = data.lcdm.logZ.toFixed(2);
+            document.getElementById('dut_logz').textContent = data.dut.logZ.toFixed(2);
+            document.getElementById('log_bf').textContent = '+' + data.comparison.log_bayes_factor.toFixed(2);
+        }
+
+        async function loadChart(type) {
+            // Update button styles
+            document.querySelectorAll('button').forEach(btn => {
+                btn.className = 'px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300';
+            });
+            event.target.className = 'px-6 py-3 rounded-xl font-semibold bg-cyan-600 text-white';
+
+            const data = await fetch(`${API_URL}/api/${type}`).then(r => r.json());
+
+            const titles = {
+                hz: ['H(z) - Parâmetro de Hubble', 'H(z) [km/s/Mpc]'],
+                mu: ['μ(z) - Módulo de Distância', 'μ(z)'],
+                dv: ['D_V(z) - Volume BAO', 'D_V(z) [Mpc]'],
+                fs8: ['fσ₈(z) - Taxa de Crescimento', 'fσ₈(z)']
+            };
+
+            const traces = [
+                {
+                    x: data.z,
+                    y: data.lcdm,
+                    mode: 'lines',
+                    name: 'ΛCDM',
+                    line: { color: '#ef4444', width: 3, dash: 'dash' }
+                },
+                {
+                    x: data.z,
+                    y: data.dut,
+                    mode: 'lines',
+                    name: 'DUT',
+                    line: { color: '#22d3ee', width: 4 }
+                }
+            ];
+
+            // Add observational data if available
+            if (data.data_z) {
+                traces.push({
+                    x: data.data_z,
+                    y: data.data_hz || data.data_fs8,
+                    error_y: {
+                        type: 'data',
+                        array: data.data_err,
+                        visible: true
+                    },
+                    mode: 'markers',
+                    name: 'Dados',
+                    marker: { color: '#fff', size: 8 }
+                });
+            }
+
+            const layout = {
+                title: { text: titles[type][0], font: { color: '#e0e0e0', size: 20 } },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(15,23,42,0.5)',
+                xaxis: { title: 'Redshift z', gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0' },
+                yaxis: { title: titles[type][1], gridcolor: 'rgba(255,255,255,0.1)', color: '#e0e0e0' },
+                font: { color: '#e0e0e0' },
+                legend: { x: 0.02, y: 0.98, bgcolor: 'rgba(0,0,0,0.7)' }
+            };
+
+            Plotly.newPlot('chart', traces, layout, { responsive: true });
+        }
+
+        // Initialize
+        loadMetrics();
+        loadChart('hz');
+    </script>
+</body>
+</html>
