@@ -28,15 +28,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# =============================================================================
-# GLOBAL CONFIG
-# =============================================================================
-N_Z_GRID_POINTS = 1000  # Reduced for API performance
+N_Z_GRID_POINTS = 1000
 CACHE_FILE = "ninja_cache_results.pkl"
 
-# =============================================================================
-# DATA LOADER (Identical to main script)
-# =============================================================================
 class NinjaDataVectorized:
     """Real Cosmological Data 2025"""
     def __init__(self):
@@ -46,7 +40,7 @@ class NinjaDataVectorized:
         self.load_all_data()
 
     def load_all_data(self):
-        # PANTHEON+ (compressed)
+
         z_low = np.linspace(0.01, 0.1, 240)
         z_mid = np.linspace(0.12, 0.6, 520)
         z_high = np.linspace(0.65, 1.4, 200)
@@ -57,17 +51,17 @@ class NinjaDataVectorized:
         self.pantheon_cov = np.eye(len(self.pantheon_z)) * (err**2 + 0.015**2)
         self.n_sn = len(self.pantheon_z)
 
-        # PLANCK 2018
+
         self.planck_mean = np.array([301.8, 1.0411, 0.02236, 0.143, 67.36, 0.811])
         self.n_planck = 6
 
-        # BAO DESI Y3
+
         self.bao_z = np.array([0.106, 0.38, 0.51, 0.61, 0.79, 1.05, 1.55, 2.11])
         self.bao_DV = np.array([457.4, 1509.3, 2037.1, 2501.9, 3180.5, 4010.2, 5320.1, 6500.8])
         self.bao_err = np.array([12.5, 25.1, 28.5, 33.2, 45.0, 50.1, 62.1, 80.5])
         self.n_bao = len(self.bao_z)
 
-        # H(z) CC + EUCLID
+
         hz_euclid_z = np.array([0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7])
         hz_euclid_data = np.array([130.5, 155.2, 180.1, 205.5, 230.1, 255.8, 280.9, 305.5, 330.1, 355.2])
         hz_euclid_err = np.array([4.5, 5.1, 6.2, 7.0, 8.1, 9.5, 10.1, 11.2, 12.5, 14.1])
@@ -88,31 +82,28 @@ class NinjaDataVectorized:
         self.hz_err = np.concatenate([hz_old_err, hz_euclid_err])
         self.n_hz = len(self.hz_z)
 
-        # fσ8
+
         self.fs8_z = np.array([0.01,0.15,0.25,0.30,0.37,0.38,0.42,0.51,0.56,0.60,0.61,0.64,0.67,0.70,0.73,0.85,0.95,1.10,1.23,1.52,1.7,1.94,2.25,0.8,0.95,1.1,1.4,1.75])
         self.fs8_data = np.array([0.45,0.413,0.428,0.43,0.44,0.437,0.45,0.452,0.46,0.462,0.462,0.465,0.468,0.468,0.47,0.475,0.465,0.46,0.455,0.45,0.445,0.44,0.435,0.47,0.465,0.46,0.45,0.44])
         self.fs8_err = np.array([0.05,0.03,0.028,0.03,0.035,0.025,0.03,0.02,0.025,0.018,0.018,0.02,0.022,0.017,0.018,0.025,0.02,0.022,0.025,0.03,0.032,0.035,0.04,0.022,0.02,0.022,0.028,0.03])
         self.n_fs8 = len(self.fs8_z)
 
-        # CMB-S4
+
         self.cmb_s4_z = 1090.0
         self.cmb_s4_DA = 13.91
         self.cmb_s4_DA_err = 0.05
         self.n_cmb_s4 = 1
 
-        # LSST Y1 Shear
+
         self.LSST_S8_mean = 0.771
         self.LSST_S8_err = 0.008
 
-        # SH0ES FINAL DR4
+
         self.H0_SH0ES_mean = 73.04
         self.H0_SH0ES_err = 0.50
 
 data = NinjaDataVectorized()
 
-# =============================================================================
-# MODELS (Simplified for API)
-# =============================================================================
 class BaseModel:
     """Base cosmological model"""
     def __init__(self, H0, Om, data, w0=-1.0, wa=0.0, xi=0.0):
@@ -162,15 +153,10 @@ class DUT_Vectorized(BaseModel):
     def fs8_model(self, z):
         a = 1.0 / (1.0 + z)
         Om_z = self.Om / (a**3 * (self.H(z)/self.H0)**2)
-        f_z = Om_z**0.52  # Slightly suppressed
+        f_z = Om_z**0.52
         D_z_approx = Om_z**(3/7)
         return f_z * D_z_approx * self.s8
 
-# =============================================================================
-# API ENDPOINTS
-# =============================================================================
-
-# Best-fit parameters (from typical analysis)
 BEST_FIT = {
     "lcdm": {"H0": 67.8, "Om": 0.315, "s8": 0.811},
     "dut": {"H0": 69.2, "Om": 0.298, "w0": -1.05, "wa": 0.08, "xi": 0.035, "s8": 0.795}
@@ -273,7 +259,7 @@ async def get_parameters():
 @app.get("/api/analysis/metrics")
 async def get_metrics():
     """Get model comparison metrics (simulated from typical run)"""
-    # These would come from actual nested sampling in production
+
     return JSONResponse({
         "lcdm": {
             "chi2_min": 2891.1,
@@ -321,10 +307,6 @@ async def get_evidence():
 @app.get("/health")
 async def health():
     return {"status": "operational", "data_loaded": True, "n_datasets": 4}
-
-# =============================================================================
-# HTML VIEWER
-# =============================================================================
 
 HTML_VIEWER = '''<!DOCTYPE html>
 <html lang="en">
