@@ -1,8 +1,95 @@
+# ===============================================================
+#  NINJA SUPREME 2.0 — ExtractoDAO Scientific Software Framework
+#  Unified Bayesian Cosmology Engine (ΛCDM vs DUT)
+#  Student / Educational Simulation Edition
+# ===============================================================
+#  © 2025 ExtractoDAO Labs — All Rights Reserved
+#  Company Name: ExtractoDAO S.A.
+#  CNPJ (Brazil National Registry): 48.839.397/0001-36
+#  Contact (Scientific & Licensing): contato@extractodao.com
+# ===============================================================
+#
+#  LICENSE AND PERMISSIONS
+#  ------------------------
+#  This software is released for academic transparency and
+#  non-commercial scientific research. The following conditions apply:
+#
+#    1. Redistribution or modification of this code is strictly
+#       prohibited without prior written authorization from
+#       ExtractoDAO Labs.
+#
+#    2. Use of this code in scientific research, publications,
+#       computational pipelines, or derivative works REQUIRES
+#       explicit citation of the following reference:
+#
+#       Almeida, J. (2025).
+#       Dead Universe Theory's Entropic Retraction Resolves ΛCDM's
+#       Hubble and Growth Tensions Simultaneously:
+#       Δχ² = –211.6 with Identical Datasets.
+#       Zenodo. https://doi.org/10.5281/zenodo.17752029
+#
+#    3. Any use of the real data integrations (Pantheon+, Planck,
+#       BAO, H(z), fσ8) must also cite their respective collaborations.
+#
+#    4. Unauthorized commercial, academic, or technological use of
+#       the ExtractoDAO Scientific Engine, or integration of this
+#       code into external systems without permission, constitutes
+#       violation of Brazilian Copyright Law (Lei 9.610/98),
+#       international IP treaties (Berne Convention), and related
+#       legislation.
+#
+# ===============================================================
+#  IMPORTANT ACADEMIC NOTICE — STUDENT / EDUCATIONAL SIMULATION VERSION
+# ===============================================================
+#
+#  This file corresponds to the STUDENT & EDUCATIONAL SIMULATION EDITION of
+#  the NINJA SUPREME 2.0 framework.
+#
+#  • All observational datasets embedded herein are SYNTHETIC, SIMULATED,
+#    or statistically reconstructed for pedagogical, demonstrative, and
+#    interface-testing purposes only.
+#
+#  • No raw, proprietary, embargoed, or collaboration-restricted datasets
+#    (including Pantheon+, Planck, DESI, Euclid, LSST, CMB-S4 or SH0ES)
+#    are distributed in this file.
+#
+#  • Numerical values, covariance structures, likelihoods, χ² statistics,
+#    Bayesian evidences, and model-comparison metrics are NOT to be interpreted
+#    as official scientific results, measurements, or final inferences.
+#
+#  • This edition is intended exclusively for:
+#       – student training,
+#       – educational demonstrations,
+#       – software architecture inspection,
+#       – API / visualization testing,
+#       – methodological illustration.
+#
+#  • Any scientific publication, policy claim, commercial use, or public
+#    dissemination based on this file is strictly prohibited.
+#
+#  • Official scientific analyses of NINJA SUPREME 2.0 are performed only
+#    within the ExtractoDAO controlled research pipeline, using licensed
+#    datasets and auditable computational ledgers.
+#
+#  By executing or distributing this file, the user acknowledges that this
+#  software instance does NOT represent a production, publication-grade,
+#  or decision-grade cosmological analysis.
+#
+# ===============================================================
+
 #!/usr/bin/env python3
 """
-🥷⭐ NINJA SUPREME 2.0 API - Bayesian Cosmology Data Service
-Full-featured FastAPI backend serving real cosmological analysis results
-Run: python ninja_supreme_api_v2.py → Access http://localhost:8000/viewer
+NINJA SUPREME 2.0 API - Bayesian Cosmology Data Service
+
+FastAPI backend for a student-oriented Bayesian cosmology demonstration API.
+This file uses synthetic/simulated datasets for educational and interface-testing
+purposes, as described in the notice above.
+
+Run:
+    python ninja_supreme_api_v2.py
+
+Access:
+    http://localhost:8000/viewer
 """
 
 from fastapi import FastAPI, BackgroundTasks
@@ -19,7 +106,6 @@ import json
 
 app = FastAPI(title="NINJA SUPREME 2.0 - Bayesian Cosmology API")
 
-# Enable CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -31,8 +117,9 @@ app.add_middleware(
 N_Z_GRID_POINTS = 1000
 CACHE_FILE = "ninja_cache_results.pkl"
 
+
 class NinjaDataVectorized:
-    """Real Cosmological Data 2025"""
+    """Synthetic cosmological datasets for educational simulation."""
     def __init__(self):
         self.c = 299792.458
         self.z_grid = np.logspace(-3, np.log10(5), N_Z_GRID_POINTS)
@@ -48,19 +135,16 @@ class NinjaDataVectorized:
         self.pantheon_z = np.concatenate([z_low, z_mid, z_high, z_vhigh])
         self.pantheon_mu = 5*np.log10(self.pantheon_z+0.01) + 36.18 + 0.06*np.sin(2*np.pi*self.pantheon_z)
         err = 0.14 + 0.025*self.pantheon_z
-        self.pantheon_cov = np.eye(len(self.pantheon_z)) * (err**2 + 0.015**2)
+        self.pantheon_cov = np.eye(len(self.pantheon_z)) * (err*2 + 0.015*2)
         self.n_sn = len(self.pantheon_z)
-
 
         self.planck_mean = np.array([301.8, 1.0411, 0.02236, 0.143, 67.36, 0.811])
         self.n_planck = 6
-
 
         self.bao_z = np.array([0.106, 0.38, 0.51, 0.61, 0.79, 1.05, 1.55, 2.11])
         self.bao_DV = np.array([457.4, 1509.3, 2037.1, 2501.9, 3180.5, 4010.2, 5320.1, 6500.8])
         self.bao_err = np.array([12.5, 25.1, 28.5, 33.2, 45.0, 50.1, 62.1, 80.5])
         self.n_bao = len(self.bao_z)
-
 
         hz_euclid_z = np.array([0.9, 1.1, 1.3, 1.5, 1.7, 1.9, 2.1, 2.3, 2.5, 2.7])
         hz_euclid_data = np.array([130.5, 155.2, 180.1, 205.5, 230.1, 255.8, 280.9, 305.5, 330.1, 355.2])
@@ -82,30 +166,28 @@ class NinjaDataVectorized:
         self.hz_err = np.concatenate([hz_old_err, hz_euclid_err])
         self.n_hz = len(self.hz_z)
 
-
         self.fs8_z = np.array([0.01,0.15,0.25,0.30,0.37,0.38,0.42,0.51,0.56,0.60,0.61,0.64,0.67,0.70,0.73,0.85,0.95,1.10,1.23,1.52,1.7,1.94,2.25,0.8,0.95,1.1,1.4,1.75])
         self.fs8_data = np.array([0.45,0.413,0.428,0.43,0.44,0.437,0.45,0.452,0.46,0.462,0.462,0.465,0.468,0.468,0.47,0.475,0.465,0.46,0.455,0.45,0.445,0.44,0.435,0.47,0.465,0.46,0.45,0.44])
         self.fs8_err = np.array([0.05,0.03,0.028,0.03,0.035,0.025,0.03,0.02,0.025,0.018,0.018,0.02,0.022,0.017,0.018,0.025,0.02,0.022,0.025,0.03,0.032,0.035,0.04,0.022,0.02,0.022,0.028,0.03])
         self.n_fs8 = len(self.fs8_z)
-
 
         self.cmb_s4_z = 1090.0
         self.cmb_s4_DA = 13.91
         self.cmb_s4_DA_err = 0.05
         self.n_cmb_s4 = 1
 
-
         self.LSST_S8_mean = 0.771
         self.LSST_S8_err = 0.008
-
 
         self.H0_SH0ES_mean = 73.04
         self.H0_SH0ES_err = 0.50
 
+
 data = NinjaDataVectorized()
 
+
 class BaseModel:
-    """Base cosmological model"""
+    """Base cosmological model."""
     def __init__(self, H0, Om, data, w0=-1.0, wa=0.0, xi=0.0):
         self.H0, self.Om, self.w0, self.wa, self.xi = H0, Om, w0, wa, xi
         self.data = data
@@ -127,50 +209,54 @@ class BaseModel:
     def mu(self, z): return 5*np.log10(self.DL(z)) + 25
     def DV(self, z):
         Dc_z = self.Dc(z); Hz_z = self.H(z)
-        return ((1+z)*Dc_z**2 * self.data.c/Hz_z)**(1/3)
+        return ((1+z) * (Dc_z**2) * self.data.c/Hz_z)**(1/3)
     def DA_Gpc(self, z):
         return self.Dc(z) * (1 / (1+z)) * (data.c / 1e5)
 
+
 class LCDM_Vectorized(BaseModel):
-    """ΛCDM Model"""
+    """LCDM model."""
     def __init__(self, H0, Om, s8, data):
         super().__init__(H0, Om, data)
         self.s8 = s8
 
     def fs8_model(self, z):
         a = 1.0 / (1.0 + z)
-        Om_z = self.Om / (a**3 * (self.H(z)/self.H0)**2)
+        Om_z = self.Om / (a*3 * (self.H(z)/self.H0)*2)
         f_z = Om_z**0.55
         D_z_approx = Om_z**(3/7)
         return f_z * D_z_approx * self.s8
 
+
 class DUT_Vectorized(BaseModel):
-    """DUT Model (simplified fs8)"""
+    """DUT model (simplified fs8)."""
     def __init__(self, H0, Om, w0, wa, xi, s8, data):
         super().__init__(H0, Om, data, w0, wa, xi)
         self.s8 = s8
 
     def fs8_model(self, z):
         a = 1.0 / (1.0 + z)
-        Om_z = self.Om / (a**3 * (self.H(z)/self.H0)**2)
+        Om_z = self.Om / (a*3 * (self.H(z)/self.H0)*2)
         f_z = Om_z**0.52
         D_z_approx = Om_z**(3/7)
         return f_z * D_z_approx * self.s8
+
 
 BEST_FIT = {
     "lcdm": {"H0": 67.8, "Om": 0.315, "s8": 0.811},
     "dut": {"H0": 69.2, "Om": 0.298, "w0": -1.05, "wa": 0.08, "xi": 0.035, "s8": 0.795}
 }
 
+
 def generate_model_curves(z_array, model_type="lcdm"):
-    """Generate curves for a given model"""
+    """Generate curves for a given model."""
     params = BEST_FIT[model_type]
 
     if model_type == "lcdm":
         model = LCDM_Vectorized(params["H0"], params["Om"], params["s8"], data)
     else:
         model = DUT_Vectorized(params["H0"], params["Om"], params["w0"],
-                              params["wa"], params["xi"], params["s8"], data)
+                               params["wa"], params["xi"], params["s8"], data)
 
     return {
         "hz": model.H(z_array).tolist(),
@@ -179,14 +265,15 @@ def generate_model_curves(z_array, model_type="lcdm"):
         "fs8": model.fs8_model(z_array).tolist()
     }
 
+
 @app.get("/")
 async def root():
     return {
         "name": "NINJA SUPREME 2.0 - Bayesian Cosmology API",
         "version": "2.0",
-        "description": "Full cosmological analysis with ΛCDM vs DUT comparison",
+        "description": "Student / educational simulation API for LCDM vs DUT comparison",
         "endpoints": {
-            "/api/data/observational": "Get all observational data",
+            "/api/data/observational": "Get synthetic observational datasets",
             "/api/models/curves": "Get model predictions",
             "/api/models/parameters": "Get best-fit parameters",
             "/api/analysis/metrics": "Get comparison metrics",
@@ -195,9 +282,9 @@ async def root():
         }
     }
 
+
 @app.get("/api/data/observational")
 async def get_observational_data():
-    """Return all observational datasets"""
     return JSONResponse({
         "pantheon": {
             "z": data.pantheon_z.tolist(),
@@ -229,9 +316,9 @@ async def get_observational_data():
         }
     })
 
+
 @app.get("/api/models/curves")
 async def get_model_curves(z_min: float = 0.01, z_max: float = 2.5, n_points: int = 100):
-    """Generate model predictions"""
     z_array = np.linspace(z_min, z_max, n_points)
 
     return JSONResponse({
@@ -240,26 +327,25 @@ async def get_model_curves(z_min: float = 0.01, z_max: float = 2.5, n_points: in
         "dut": generate_model_curves(z_array, "dut")
     })
 
+
 @app.get("/api/models/parameters")
 async def get_parameters():
-    """Get best-fit parameters for both models"""
     return JSONResponse({
         "lcdm": {
             "parameters": BEST_FIT["lcdm"],
             "n_params": 3,
-            "description": "Standard ΛCDM cosmology"
+            "description": "Standard LCDM cosmology"
         },
         "dut": {
             "parameters": BEST_FIT["dut"],
             "n_params": 6,
-            "description": "Dark Energy with interaction (DUT model)"
+            "description": "Dark energy with interaction (DUT model)"
         }
     })
 
+
 @app.get("/api/analysis/metrics")
 async def get_metrics():
-    """Get model comparison metrics (simulated from typical run)"""
-
     return JSONResponse({
         "lcdm": {
             "chi2_min": 2891.1,
@@ -278,14 +364,14 @@ async def get_metrics():
             "interpretation": {
                 "chi2": "DUT provides better fit (Δχ² = -7.6)",
                 "aic": "DUT slightly preferred (ΔAIC = -1.6)",
-                "bic": "ΛCDM preferred by parsimony (ΔBIC = +8.9)"
+                "bic": "LCDM preferred by parsimony (ΔBIC = +8.9)"
             }
         }
     })
 
+
 @app.get("/api/analysis/evidence")
 async def get_evidence():
-    """Get Bayesian evidence comparison"""
     return JSONResponse({
         "lcdm": {
             "log_evidence": -1456.32,
@@ -300,13 +386,15 @@ async def get_evidence():
             "bayes_factor": 62.8,
             "jeffreys_scale": "Strong evidence (ln(B) > 2.5)",
             "preferred_model": "DUT",
-            "interpretation": "Strong Bayesian evidence favors the DUT model over ΛCDM"
+            "interpretation": "Strong Bayesian evidence favors the DUT model over LCDM"
         }
     })
+
 
 @app.get("/health")
 async def health():
     return {"status": "operational", "data_loaded": True, "n_datasets": 4}
+
 
 HTML_VIEWER = '''<!DOCTYPE html>
 <html lang="en">
@@ -333,27 +421,25 @@ HTML_VIEWER = '''<!DOCTYPE html>
 <body class="cyber-bg text-white min-h-screen font-sans">
     <div class="container mx-auto px-6 py-12 max-w-7xl">
 
-        <!-- Header -->
         <div class="text-center mb-16">
             <h1 class="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 glow mb-4">
-                🥷⭐ NINJA SUPREME 2.0
+                NINJA SUPREME 2.0
             </h1>
-            <p class="text-xl text-cyan-300">Bayesian Cosmological Analysis | ΛCDM vs DUT</p>
-            <p class="text-sm text-gray-400 mt-2">Real Data: Pantheon+ SNe, DESI BAO, Euclid H(z), fσ8, CMB-S4</p>
+            <p class="text-xl text-cyan-300">Bayesian Cosmological Analysis | LCDM vs DUT</p>
+            <p class="text-sm text-gray-400 mt-2">Student Edition: synthetic datasets for demonstration</p>
         </div>
 
-        <!-- Metrics Cards -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
             <div class="card bg-gradient-to-br from-blue-900/50 to-blue-800/30 p-6 rounded-2xl border border-blue-500/50">
-                <div class="text-sm text-blue-300 uppercase mb-2">ΛCDM χ²/dof</div>
+                <div class="text-sm text-blue-300 uppercase mb-2">LCDM chi2/dof</div>
                 <div class="text-3xl font-black text-blue-400" id="lcdm_chi2">...</div>
             </div>
             <div class="card bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 p-6 rounded-2xl border border-cyan-500/50">
-                <div class="text-sm text-cyan-300 uppercase mb-2">DUT χ²/dof</div>
+                <div class="text-sm text-cyan-300 uppercase mb-2">DUT chi2/dof</div>
                 <div class="text-3xl font-black text-cyan-400" id="dut_chi2">...</div>
             </div>
             <div class="card bg-gradient-to-br from-purple-900/50 to-purple-800/30 p-6 rounded-2xl border border-purple-500/50">
-                <div class="text-sm text-purple-300 uppercase mb-2">Δχ²</div>
+                <div class="text-sm text-purple-300 uppercase mb-2">Delta chi2</div>
                 <div class="text-3xl font-black text-purple-400" id="delta_chi2">...</div>
             </div>
             <div class="card bg-gradient-to-br from-green-900/50 to-green-800/30 p-6 rounded-2xl border border-green-500/50">
@@ -362,35 +448,32 @@ HTML_VIEWER = '''<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- Evidence Interpretation -->
         <div class="card bg-gray-900/80 p-8 rounded-3xl border border-cyan-500/30 mb-12">
-            <h2 class="text-2xl font-bold text-cyan-400 mb-4">📊 Bayesian Evidence Analysis</h2>
+            <h2 class="text-2xl font-bold text-cyan-400 mb-4">Bayesian Evidence Analysis</h2>
             <div id="evidence_text" class="text-gray-300 text-lg leading-relaxed">Loading...</div>
         </div>
 
-        <!-- Tabs -->
         <div class="card bg-gray-900/80 p-10 rounded-3xl border border-cyan-500/30 mb-12">
             <div class="flex gap-3 mb-8 flex-wrap">
                 <button onclick="loadChart('hz')" class="px-6 py-3 rounded-xl font-semibold bg-cyan-600 text-white transition hover:bg-cyan-500">
-                    📈 H(z) - Hubble Parameter
+                    H(z) - Hubble Parameter
                 </button>
                 <button onclick="loadChart('mu')" class="px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300 transition hover:bg-gray-600">
-                    📏 μ(z) - Distance Modulus
+                    mu(z) - Distance Modulus
                 </button>
                 <button onclick="loadChart('dv')" class="px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300 transition hover:bg-gray-600">
-                    🌌 D_V(z) - BAO Volume
+                    D_V(z) - BAO Volume
                 </button>
                 <button onclick="loadChart('fs8')" class="px-6 py-3 rounded-xl font-semibold bg-gray-700 text-gray-300 transition hover:bg-gray-600">
-                    🔬 fσ₈(z) - Growth Rate
+                    f*sigma8(z) - Growth Rate
                 </button>
             </div>
             <div id="chart" style="width: 100%; height: 550px;"></div>
         </div>
 
-        <!-- Parameters -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div class="card bg-gradient-to-br from-red-900/30 to-red-800/20 p-8 rounded-2xl border border-red-500/30">
-                <h3 class="text-2xl font-bold text-red-400 mb-4">ΛCDM Parameters</h3>
+                <h3 class="text-2xl font-bold text-red-400 mb-4">LCDM Parameters</h3>
                 <div id="lcdm_params" class="space-y-2 text-gray-300"></div>
             </div>
             <div class="card bg-gradient-to-br from-cyan-900/30 to-cyan-800/20 p-8 rounded-2xl border border-cyan-500/30">
@@ -399,7 +482,6 @@ HTML_VIEWER = '''<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- Footer -->
         <div class="text-center text-gray-400 text-sm">
             <p>API: <code class="bg-gray-800 px-2 py-1 rounded">http://localhost:8000</code></p>
             <p class="mt-2">NINJA SUPREME 2.0 | Bayesian Cosmology Engine</p>
@@ -465,22 +547,22 @@ HTML_VIEWER = '''<!DOCTYPE html>
                         ylim: [60, 380]
                     },
                     mu: {
-                        title: 'μ(z) - Distance Modulus (Pantheon+ SNe)',
-                        ylabel: 'μ(z)',
+                        title: 'mu(z) - Distance Modulus',
+                        ylabel: 'mu(z)',
                         obs: obsData.pantheon,
                         model_key: 'mu',
                         ylim: [34, 46]
                     },
                     dv: {
-                        title: 'D_V(z) - BAO Volume Distance (DESI)',
+                        title: 'D_V(z) - BAO Volume Distance',
                         ylabel: 'D_V(z) [Mpc]',
                         obs: obsData.bao,
                         model_key: 'dv',
                         ylim: [400, 7000]
                     },
                     fs8: {
-                        title: 'fσ₈(z) - Growth Rate of Structure',
-                        ylabel: 'fσ₈(z)',
+                        title: 'f*sigma8(z) - Growth Rate of Structure',
+                        ylabel: 'f*sigma8(z)',
                         obs: obsData.fs8,
                         model_key: 'fs8',
                         ylim: [0.35, 0.55]
@@ -495,7 +577,7 @@ HTML_VIEWER = '''<!DOCTYPE html>
                         x: modelData.z,
                         y: modelData.lcdm[cfg.model_key],
                         mode: 'lines',
-                        name: 'ΛCDM',
+                        name: 'LCDM',
                         line: { color: '#ef4444', width: 3, dash: 'dash' }
                     },
                     {
@@ -549,7 +631,7 @@ HTML_VIEWER = '''<!DOCTYPE html>
                 document.getElementById('chart').innerHTML = `
                     <div class="flex items-center justify-center h-full text-red-400">
                         <div class="text-center">
-                            <p class="text-2xl mb-2">❌ Error loading chart</p>
+                            <p class="text-2xl mb-2">Error loading chart</p>
                             <p class="text-sm">${error.message}</p>
                         </div>
                     </div>
@@ -557,8 +639,7 @@ HTML_VIEWER = '''<!DOCTYPE html>
             }
         }
 
-        // Initialize
-        console.log('🥷⭐ NINJA SUPREME 2.0 - Initializing...');
+        console.log('NINJA SUPREME 2.0 - Initializing (Student Edition)');
         loadMetrics();
         setTimeout(() => {
             const firstBtn = document.querySelector('button');
@@ -568,32 +649,30 @@ HTML_VIEWER = '''<!DOCTYPE html>
 </body>
 </html>'''
 
+
 @app.get("/viewer")
 async def viewer():
-    """Serve the interactive HTML viewer"""
     return HTMLResponse(content=HTML_VIEWER)
 
-# =============================================================================
-# STARTUP
-# =============================================================================
 
 if __name__ == "__main__":
     print("=" * 80)
-    print("🥷⭐ NINJA SUPREME 2.0 - BAYESIAN COSMOLOGY API")
+    print("NINJA SUPREME 2.0 - BAYESIAN COSMOLOGY API (STUDENT EDITION)")
     print("=" * 80)
-    print(f"✅ Data Loaded: {data.n_sn} SNe + {data.n_bao} BAO + {data.n_hz} H(z) + {data.n_fs8} fσ8")
-    print(f"✅ Models: ΛCDM (3 params) vs DUT (6 params)")
-    print(f"✅ Resolution: z-grid with {N_Z_GRID_POINTS} points")
-    print("\n📡 Server running at:")
-    print("   • API Root: http://localhost:8000")
-    print("   • Interactive Viewer: http://localhost:8000/viewer")
-    print("   • Health Check: http://localhost:8000/health")
-    print("\n📊 Available Endpoints:")
-    print("   • GET /api/data/observational - Full observational datasets")
-    print("   • GET /api/models/curves - Model predictions")
-    print("   • GET /api/models/parameters - Best-fit parameters")
-    print("   • GET /api/analysis/metrics - Frequentist comparison")
-    print("   • GET /api/analysis/evidence - Bayesian evidence")
+    print(f"Data Loaded: {data.n_sn} SNe + {data.n_bao} BAO + {data.n_hz} H(z) + {data.n_fs8} f*sigma8")
+    print(f"Models: LCDM (3 params) vs DUT (6 params)")
+    print(f"Resolution: z-grid with {N_Z_GRID_POINTS} points")
+    print("Server running at:")
+    print("  - API Root: http://localhost:8000")
+    print("  - Interactive Viewer: http://localhost:8000/viewer")
+    print("  - Health Check: http://localhost:8000/health")
+    print("Available Endpoints:")
+    print("  - GET /api/data/observational - Synthetic observational datasets")
+    print("  - GET /api/models/curves - Model predictions")
+    print("  - GET /api/models/parameters - Best-fit parameters")
+    print("  - GET /api/analysis/metrics - Frequentist comparison")
+    print("  - GET /api/analysis/evidence - Bayesian evidence")
     print("=" * 80)
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
